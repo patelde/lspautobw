@@ -1,0 +1,951 @@
+﻿labroot@tully-re0> show |
+                        ^
+syntax error, expecting <command>.
+labroot@tully-re0> show configuration | no-more 
+## Last commit: 2018-10-22 14:10:16 PDT by labroot
+version 18.3R1.9;
+groups {
+    protect: default {
+        system {
+            login {
+                user labroot {
+                    uid 2012;
+                    class super-user;
+                    authentication {
+                        encrypted-password "$1$w9JT/1qk$wqUJrXn/j7jA03AzqxmTf/"; ## SECRET-DATA
+                    }
+                }
+            }
+            root-authentication {
+                encrypted-password "$5$Mx8g6cCA$MbVaJDPLq358ugTfOS0wZhTLlXOyFHKbFcX9rXMMVmC"; ## SECRET-DATA
+            }
+            host-name jtac-MX960-r001;
+            domain-name ultralab.juniper.net;
+            domain-search [ juniper.net ultralab.juniper.net ];
+            backup-router 10.85.158.1;
+            time-zone America/Los_Angeles;
+            debugger-on-break;
+            dump-on-panic;
+            name-server {
+                10.85.128.1;
+            }
+            services {
+                ftp;
+                ssh;
+                telnet;
+                netconf {
+                    ssh;
+                }
+                web-management {
+                    http;
+                }
+            }
+            syslog {
+                archive size 10m files 10;
+                user * {
+                    any emergency;
+                }
+                file messages {
+                    any notice;
+                    authorization info;
+                }
+                file cli-commands {
+                    interactive-commands any;
+                }
+                time-format millisecond;
+            }
+            compress-configuration-files;
+            ntp {
+                server 10.85.130.130;
+                server 10.85.130.131;
+            }
+        }
+        routing-options {
+            static {
+                route 0.0.0.0/0 next-hop 10.85.158.1;
+            }
+        }
+        protocols {
+            lldp {
+                port-id-subtype interface-name;
+                interface all;
+                interface fxp0 {
+                    disable;
+                }
+            }
+        }
+    }
+    protect: re0 {
+        system {
+            host-name tully-re0;
+        }
+        interfaces {
+            fxp0 {
+                unit 0 {
+                    family inet {
+                        address 10.85.158.4/25;
+                        address 10.85.158.6/25 {
+                            master-only;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    protect: re1 {
+        system {
+            host-name tully-re1;
+        }
+        interfaces {
+            fxp0 {
+                unit 0 {
+                    family inet {
+                        address 10.85.158.5/25;
+                        address 10.85.158.6/25 {
+                            master-only;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    lakshmana {
+        interfaces {
+            irb {
+                mtu 9192;
+                unit 2476 {
+                    family inet6 {
+                        address 2001:4888:15:ff10:194:2a1::1/64 {
+                            vrrp-inet6-group 23 {
+                                virtual-inet6-address 2001:4888:15:ff10:194:2a1::;
+                                virtual-link-local-address fe80::10;
+                                priority 100;
+                                no-preempt;
+                                accept-data;
+                            }
+                        }
+                        address fe80::1/64;
+                    }
+                }
+            }
+        }
+        protocols {
+            router-advertisement {
+                interface irb.2476 {
+                    max-advertisement-interval 4;
+                    prefix 2001:4888::/64;
+                }
+            }
+        }
+        routing-instances {
+            WSN {
+                interface irb.2476;
+                routing-options {
+                    rib WSN.inet6.0 {
+                        static {
+                            route 2001:4888:15:ff00:194:d::/128 {
+                                qualified-next-hop 2001:4888:15:ff10:194:d:: {
+                                    interface irb.2476;
+                                }
+                            }
+                            route 2001:4888:8015:ff00:194:d::/128 {
+                                qualified-next-hop 2001:4888:15:ff10:194:d:: {
+                                    interface irb.2476;
+                                }
+                            }
+                            route 2001:4888:3b:ff11:3c2:103::/128 {
+                                qualified-next-hop 2001:4888:3b:ff10:3c2:d:: {
+                                    interface irb.2476;
+                                }
+                            }
+                            route 2001:4888:3b:ff11:3c2:103::1/128 {
+                                qualified-next-hop 2001:4888:3b:ff10:3c2:d:: {
+                                    interface irb.2476;
+                                }
+                            }
+                            route 2001:4888:15:ff11:194:103::/128 {
+                                qualified-next-hop 2001:4888:15:ff10:194:d:: {
+                                    interface irb.2476;
+                                }
+                            }
+                            route 2001:4888:15:ff11:194:103::1/128 {
+                                qualified-next-hop 2001:4888:15:ff10:194:d:: {
+                                    interface irb.2476;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+apply-groups [ re0 re1 default ];
+system {
+    root-authentication {
+        encrypted-password "$6$EteTXHUZ$LGlPz0bK8gWLDTdYJW/Lc5HtWkKVtsXH8HceJ1SWhqaIIvTjYS7TaZc/lut1asVId4TDf7Kr0zfq4Y.VHSsu51"; ## SECRET-DATA
+    }
+    no-redirects;
+    dump-on-panic;
+    scripts {
+        op {
+            file xl-utilization.py {
+                arguments {
+                    c {
+                        description chip;
+                    }
+                    s {
+                        description slot;
+                    }
+                }
+            }
+        }
+        language python;
+        synchronize;
+    }
+    services {
+        finger;
+        ftp;
+        rlogin;
+        ssh {
+            root-login allow;
+            protocol-version v2;
+            connection-limit 30;
+            rate-limit 10;
+        }
+        telnet;
+        xnm-clear-text;
+        extension-service {
+            request-response {
+                grpc {
+                    clear-text {
+                        address 0.0.0.0;
+                    }
+                    skip-authentication;
+                }
+            }
+            notification {
+                allow-clients {
+                    address 0.0.0.0/0;
+                }
+            }
+        }
+        netconf {
+            ssh;
+        }
+    }
+    syslog {
+        file messages {
+            any any;
+            authorization info;
+            match "!(RPD_IGMP_ROUTER_VERSION_MISMATCH|PFE_FW_SYSLOG_IP)";
+            archive size 2m files 20;
+        }
+        file messages-disable-pfe-script {
+            pfe any;
+            match "FI.* Cell underflow at the state";
+            allow-duplicates;
+            archive size 1m files 1;
+        }
+        time-format millisecond;
+    }
+    ddos-protection {
+        protocols {
+            sample {
+                aggregate {
+                    bandwidth 6500;
+                }
+                host {
+                    bandwidth 6500;
+                }
+            }
+        }
+    }
+}
+chassis {
+    dump-on-panic;
+    redundancy {
+        failover {
+            on-loss-of-keepalives;
+            on-disk-failure;
+        }
+        keepalive-time 5;
+    }
+    routing-engine {
+        on-disk-failure disk-failure-action reboot;
+    }
+    aggregated-devices {
+        ethernet {
+            device-count 1;
+        }
+    }
+    fabric {
+        redundancy-mode {
+            increased-bandwidth;
+        }
+    }
+    network-services enhanced-ip;
+}
+services {
+    analytics {
+        streaming-server myvm {
+            remote-address 1.1.102.1;
+            remote-port 22000;
+        }
+        export-profile exportprof {
+            local-address 1.1.102.2;
+            local-port 22001;
+            reporting-rate 10;
+            format gpb;
+            transport udp;
+        }
+        sensor lspstats {
+            server-name myvm;
+            export-name exportprof;
+            resource /junos/services/label-switched-path/usage/;
+        }
+        sensor linecard-stats {
+            server-name myvm;
+            export-name exportprof;
+            resource /junos/system/linecard/npu/memory/;
+        }
+    }
+}
+interfaces {
+    traceoptions {
+        file dcd_new size 500m;
+        flag all;
+    }
+    xe-2/0/1 {
+        flexible-vlan-tagging;
+        encapsulation flexible-ethernet-services;
+        unit 0 {
+            family bridge {
+                interface-mode trunk;
+                vlan-id 10;
+            }
+        }
+    }
+    xe-3/0/0 {
+        unit 0 {
+            family inet {
+                address 1.1.13.1/24;
+            }
+            family mpls;
+        }
+    }
+    xe-9/0/0 {
+        flexible-vlan-tagging;
+        encapsulation flexible-ethernet-services;
+        inactive: esi {
+            00:11:11:11:11:11:11:11:11:11;
+            all-active;
+        }
+        unit 1 {
+            description l3vpn-intf;
+            vlan-id 1;
+            family inet {
+                address 2.1.1.1/24;
+            }
+        }
+        unit 2 {
+            description l2vpn-intf;
+            encapsulation vlan-ccc;
+            vlan-id 2;
+            family ccc;
+        }
+        unit 3 {
+            description l2ckt-intf;
+            encapsulation vlan-ccc;
+            vlan-id 3;
+            family ccc;
+        }
+        unit 4 {
+            description vpls-intf;
+            encapsulation vlan-vpls;
+            vlan-id 4;
+            family vpls;
+        }
+        unit 5 {
+            description evpn-intf-vland-based;
+            encapsulation vlan-bridge;
+            vlan-id 5;
+        }
+        unit 6 {
+            description evpn-intf-vlan-aware;
+            family bridge {
+                interface-mode trunk;
+                vlan-id-list 6;
+            }
+        }
+        unit 7 {
+            description rosen-intf;
+            vlan-id 7;
+            family inet {
+                address 2.1.7.1/24;
+            }
+        }
+        unit 8 {
+            description host-traffic;
+            vlan-id 8;
+            family inet {
+                filter {
+                    input test_8;
+                }
+                address 2.1.8.1/24;
+            }
+        }
+        unit 11 {
+            encapsulation vlan-vpls;
+            vlan-id 11;
+            family vpls;
+        }
+    }
+    xe-9/0/1 {
+        apply-groups-except INTERFACE; ## 'INTERFACE' is not defined
+        flexible-vlan-tagging;
+        encapsulation flexible-ethernet-services;
+        unit 12 {
+            vlan-id 12;
+            family inet {
+                address 1.1.12.1/24;
+            }
+            family iso;
+            family mpls;
+        }
+    }
+    xe-9/2/1 {
+        description "To jfit VM";
+        unit 0 {
+            family inet {
+                address 1.1.102.2/24;
+            }
+        }
+    }
+    dsc {
+        unit 0 {
+            description "testing iteration 100";
+            family inet {
+                address 198.32.11.6/32 {
+                    destination 198.32.11.7;
+                }
+            }
+            family mpls;
+        }
+    }
+    irb {
+        unit 6 {
+            family inet {
+                address 172.16.6.1/24;
+            }
+            mac 00:66:66:66:66:66;
+        }
+        unit 10 {
+            family inet {
+                address 1.1.10.1/24;
+            }
+        }
+    }
+    lo0 {
+        unit 0 {
+            family inet {
+                address 192.168.1.1/32;
+                address 127.0.0.1/32;
+            }
+            family iso {
+                address 49.0001.0000.0000.0001.00;
+            }
+        }
+        unit 1 {
+            family inet {
+                address 192.168.11.1/32;
+            }
+        }
+        unit 2 {
+            family inet {
+                address 192.168.11.2/32;
+            }
+        }
+    }
+    tap {
+        unit 0;
+    }
+}
+snmp {
+    community public {
+        authorization read-write;
+    }
+}
+forwarding-options {
+    sampling {
+        input {
+            rate 10000;
+        }
+        family inet {
+            output {
+                file filename tully_sample.pkt world-readable;
+                flow-server 192.168.1.2 {
+                    port 9995;
+                    local-dump;
+                    source-address 192.168.1.1;
+                    version 5;
+                }
+            }
+        }
+    }
+}
+inactive: event-options {
+    policy snmp_trap_link_up {
+        events snmp_trap_link_up;
+        then {
+            priority-override {
+                severity notice;
+            }
+        }
+    }
+    policy disable_ifd_mq_xm_ea_mpcs {
+        events PIC;
+        within 1 {
+            trigger on 1;
+        }
+        attributes-match {
+            PIC.message matches "FI: Cell un.*t [4-6][0-9]{4}|EPM[0-1]:.*eQ empty|EPM[0-1]:.*free pool single po|DDRIF: Ch.*m .*sum Errors 255|DRD[0-1]: Command seq.* err|DRD[0-1]*: .+ timeout error|FO: Cell pack|CPQ1: Queue un";
+        }
+        then {
+            event-script disable_ifd_mq_xm_ea_mpcs.slax {
+                arguments {
+                    message "{$$.message}";
+                    quick-act-lsc TRUE;
+                    no-append-comment TRUE;
+                }
+            }
+        }
+    }
+    policy disable_ifd_mq_xm_ea_mpcs_misc {
+        events PIC;
+        within 1 {
+            trigger on 1;
+        }
+        attributes-match {
+            PIC.message matches "Link sanity ch|BACK WEDGE DE|LUCHIP.* ucode data err|DDRIF FO[0-1] Checksum Error|Error .* module: PRECL.*, type:|CMTFPC.*self ping black";
+        }
+        then {
+            event-script disable_ifd_mq_xm_ea_mpcs.slax {
+                arguments {
+                    message "{$$.message}";
+                    quick-act-lsc TRUE;
+                    no-append-comment TRUE;
+                }
+            }
+        }
+    }
+    event-script {
+        file disable_ifd_mq_xm_ea_mpcs.slax;
+    }
+}
+routing-options {
+    ppm {
+        traceoptions {
+            file ppm.log size 10m;
+            flag error;
+            flag all;
+        }
+    }
+    lsp-telemetry;
+    static {
+        defaults {
+            active;
+        }
+        route 198.32.8.0/22 {
+            discard;
+            community 11537:950;
+        }
+        route 198.32.154.0/24 {
+            discard;
+            community 11537:950;
+        }
+        route 198.32.12.0/22 {
+            discard;
+            community 11537:950;
+        }
+        route 64.57.16.0/20 {
+            discard;
+            community 11537:950;
+        }
+        route 198.71.45.0/24 {
+            discard;
+            community 11537:950;
+        }
+        route 198.71.46.0/24 {
+            discard;
+            community 11537:950;
+        }
+        route 162.252.70.0/24 {
+            discard;
+            community 11537:950;
+        }
+        route 193.251.128.23/32 next-hop 198.71.46.41;
+        route 193.251.128.3/32 next-hop 198.71.46.41;
+        route 172.1.1.1/32 next-hop [ 1.1.12.2 1.1.23.2 ];
+        route 172.1.1.2/32 next-hop [ 1.1.12.2 1.1.23.2 1.1.13.2 ];
+    }
+    aggregate {
+        defaults {
+            community 11537:950;
+            discard;
+        }
+        route 64.57.16.0/21;
+        route 64.57.24.0/22;
+        route 64.57.28.0/22;
+        route 198.71.44.0/22;
+        route 198.71.45.0/24;
+        route 198.71.46.0/24;
+        route 162.252.70.0/24;
+    }
+    router-id 192.168.1.1;
+    autonomous-system 100;
+    forwarding-table {
+        export lb;
+    }
+}
+protocols {
+    rsvp {
+        interface all;
+    }
+    mpls {
+        statistics {
+            file mplsstats size 5m files 10 world-readable;
+            interval 5;
+        }
+        inactive: traffic-engineering {
+            bgp-igp;
+        }
+        sensor-based-stats;
+        label-switched-path r1tor3 {
+            to 192.168.1.3;
+            no-self-ping;
+        }
+        label-switched-path r1tor3-1 {
+            to 192.168.1.3;
+        }
+        interface all;
+    }
+    bgp {
+        group ibgp {
+            type internal;
+            traceoptions {
+                file bgp.log size 10m;
+                flag bfd;
+            }
+            local-address 192.168.1.1;
+            hold-time 10;
+            family inet-vpn {
+                unicast;
+            }
+            family l2vpn {
+                signaling;
+            }
+            family evpn {
+                signaling;
+            }
+            family inet-mvpn {
+                signaling;
+            }
+            family inet-mdt {
+                signaling;
+            }
+            neighbor 192.168.1.3 {
+                bfd-liveness-detection {
+                    minimum-interval 100;
+                }
+            }
+            neighbor 192.168.1.2 {
+                bfd-liveness-detection {
+                    minimum-interval 100;
+                }
+            }
+        }
+    }
+    isis {
+        interface xe-9/0/1.12;
+        interface lo0.0;
+    }
+    ospf {
+        inactive: traceoptions {
+            file ospf-trace;
+            flag all;
+        }
+        traffic-engineering;
+        area 0.0.0.0 {
+            interface fxp0.0 {
+                disable;
+            }
+            interface xe-9/0/1.12 {
+                hello-interval 1;
+                dead-interval 3;
+            }
+            interface xe-9/0/0.8 {
+                passive;
+            }
+            interface lo0.0;
+            interface xe-3/0/0.0 {
+                metric 100;
+            }
+        }
+    }
+    ldp {
+        interface lo0.0;
+    }
+    pim {
+        interface all;
+        interface xe-9/0/0.8;
+        interface xe-9/0/1.12;
+        interface xe-3/0/0.0;
+    }
+    l2circuit {
+        neighbor 192.168.1.3 {
+            interface xe-9/0/0.3 {
+                virtual-circuit-id 3;
+            }
+        }
+    }
+    bfd {
+        traceoptions {
+            file bfd.log size 10m;
+            flag all;
+        }
+    }
+}
+policy-options {
+    policy-statement lb {
+        term 1 {
+            then {
+                load-balance per-packet;
+            }
+        }
+    }
+}
+firewall {
+    family inet {
+        filter sample {
+            term 1 {
+                then {
+                    sample;
+                    accept;
+                }
+            }
+            term 2 {
+                then accept;
+            }
+        }
+        filter test_8 {
+            term 1 {
+                from {
+                    destination-address {
+                        2.2.8.2/32;
+                    }
+                }
+                then {
+                    discard;
+                }
+            }
+            term 2 {
+                then accept;
+            }
+        }
+    }
+    family mpls {
+        filter jtac {
+            interface-specific;
+            term 1 {
+                from {
+                    flexible-match-range {
+                        match-start layer-3;
+                        byte-offset 0;
+                        bit-length 20;
+                        range 0x49301;
+                    }
+                }
+                then {
+                    count outer-label;
+                    discard;
+                }
+            }
+            term 2 {
+                then {
+                    count rest-traffic;
+                    accept;
+                }
+            }
+        }
+    }
+}
+routing-instances {
+    evpn6pe1 {
+        instance-type virtual-switch;
+        interface xe-9/0/0.6;
+        route-distinguisher 1:6;
+        vrf-target target:1:6;
+        protocols {
+            evpn {
+                extended-vlan-list 6;
+            }
+        }
+        bridge-domains {
+            vlan6 {
+                vlan-id-list 6;
+            }
+        }
+    }
+    evpnpe1 {
+        instance-type evpn;
+        vlan-id 5;
+        interface xe-9/0/0.5;
+        route-distinguisher 1:5;
+        vrf-target target:1:5;
+        protocols {
+            evpn;
+        }
+    }
+    l2vpn {
+        instance-type l2vpn;
+        interface xe-9/0/0.2;
+        route-distinguisher 1:2;
+        vrf-target target:1:2;
+        protocols {
+            l2vpn {
+                encapsulation-type ethernet-vlan;
+                site pe1 {
+                    site-identifier 1;
+                    interface xe-9/0/0.2 {
+                        remote-site-id 2;
+                    }
+                }
+            }
+        }
+    }
+    mvpn {
+        instance-type vrf;
+        interface xe-9/0/0.1;
+        interface lo0.1;
+        route-distinguisher 1:11;
+        provider-tunnel {
+            rsvp-te {
+                label-switched-path-template {
+                    default-template;
+                }
+            }
+        }
+        vrf-target target:1:1;
+        vrf-table-label;
+        protocols {
+            bgp {
+                group ebgp {
+                    type external;
+                    neighbor 2.1.1.2 {
+                        peer-as 200;
+                    }
+                }
+            }
+            ospf {
+                area 0.0.0.0 {
+                    interface all;
+                }
+            }
+            pim {
+                rp {
+                    local {
+                        address 192.168.11.1;
+                    }
+                }
+                interface all;
+            }
+            mvpn;
+        }
+    }
+    rosen {
+        instance-type vrf;
+        interface xe-9/0/0.7;
+        interface lo0.2;
+        route-distinguisher 1:7;
+        provider-tunnel {
+            family {
+                inet {
+                    pim-ssm {
+                        group-address 232.1.1.1;
+                    }
+                }
+            }
+        }
+        vrf-target target:1:7;
+        protocols {
+            ospf {
+                area 0.0.0.0 {
+                    interface all;
+                }
+            }
+            pim {
+                mvpn {
+                    family {
+                        inet {
+                            autodiscovery {
+                                inet-mdt;
+                            }
+                        }
+                    }
+                }
+                interface all;
+            }
+            mvpn {
+                family {
+                    inet {
+                        autodiscovery-only {
+                            intra-as {
+                                inclusive;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    vpls1 {
+        instance-type vpls;
+        vlan-id 11;
+        interface xe-9/0/0.11;
+        route-distinguisher 11:4;
+        vrf-target target:1:4;
+        protocols {
+            vpls {
+                interface xe-9/0/0.11;
+                no-tunnel-services;
+                site vpls1 {
+                    site-identifier 1;
+                }
+            }
+        }
+    }
+    vplspe1 {
+        instance-type vpls;
+        vlan-id 4;
+        interface xe-9/0/0.4;
+        route-distinguisher 1:4;
+        vrf-target target:1:4;
+        protocols {
+            vpls {
+                interface xe-9/0/0.4;
+                no-tunnel-services;
+                site vplspe1-test {
+                    site-identifier 1;
+                }
+            }
+        }
+    }
+}
+bridge-domains {
+    vlan10 {
+        vlan-id 10;
+        routing-interface irb.10;
+    }
+}
+
